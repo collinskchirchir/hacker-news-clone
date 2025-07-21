@@ -4,6 +4,8 @@ import { HTTPException } from 'hono/http-exception';
 
 import type { Context } from '@/db/context.ts';
 import { lucia } from '@/lucia.ts';
+import { authRouter } from '@/routes/auth.ts';
+import { ZodError } from 'zod';
 
 import type { ErrorResponse } from '@/shared/types.ts';
 
@@ -32,6 +34,8 @@ app.use('*', cors(), async (c, next) => {
   c.set('user', user);
   return next();
 });
+
+const routes = app.basePath('/api').route('/auth', authRouter);
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {
@@ -62,3 +66,5 @@ app.onError((err, c) => {
   );
 });
 export default app;
+
+export type ApiRoutes = typeof routes;
