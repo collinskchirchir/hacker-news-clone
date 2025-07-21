@@ -1,20 +1,36 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+
+import type { Context } from '@/db/context.ts';
+import { lucia } from '@/lucia.ts';
 
 import type { ErrorResponse } from '@/shared/types.ts';
 
-const app = new Hono();
+const app = new Hono<Context>();
 
-app.get('/', (c) => {
-  // throw new Error('Unexpected');
-  // purposeful exception
-  /**
-   throw new HTTPException(404, {
-   message: 'Post Not Found',
-   cause: { form: true },
-   });
-   */
-  return c.text('Hello Hono!');
+app.use('*', cors(), async (c, next) => {
+  const sessionId = lucia.readSessionCookie(c.req.header('Cookie') ?? '');
+  if (!sessionId) {
+    c.set('user', null);
+    c.set('session', null);
+    return next();
+  }
+
+  const { session, user } = await lucia.validateSession(sessionId);
+  if (session && session.fresh) {
+    c.header('Set-Cookie', lucia.createSessionCookie(session.id).serialize(), {
+      append: true,
+    });
+  }
+  if (!session) {
+    c.header('Set-Cookie', lucia.createBlankSessionCookie().serialize(), {
+      append: true,
+    });
+  }
+  c.set('session', session);
+  c.set('user', user);
+  return next();
 });
 
 app.onError((err, c) => {
