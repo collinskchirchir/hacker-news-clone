@@ -4,6 +4,7 @@
 //   message: 'Post Created',
 //   data: {id: 1}
 // };
+import { insertPostSchema } from '@/db/schemas/posts.ts';
 import { z } from 'zod';
 
 export type SuccessResponse<T = void> = {
@@ -24,3 +25,14 @@ export const loginSchema = z.object({
     .regex(/^[a-zA-Z0-9_]+$/),
   password: z.string().min(3).max(255),
 });
+
+export const createPostSchema = insertPostSchema
+  .pick({
+    title: true,
+    url: true,
+    content: true,
+  })
+  .refine((data) => data.url || data.content, {
+    message: 'Either url or content is required',
+    path: ['url', 'content'],
+  });

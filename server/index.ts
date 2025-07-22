@@ -5,7 +5,7 @@ import { HTTPException } from 'hono/http-exception';
 import type { Context } from '@/db/context.ts';
 import { lucia } from '@/lucia.ts';
 import { authRouter } from '@/routes/auth.ts';
-import { ZodError } from 'zod';
+import { postRouter } from '@/routes/posts.ts';
 
 import type { ErrorResponse } from '@/shared/types.ts';
 
@@ -35,7 +35,11 @@ app.use('*', cors(), async (c, next) => {
   return next();
 });
 
-const routes = app.basePath('/api').route('/auth', authRouter);
+let postsRouter;
+const routes = app
+  .basePath('/api')
+  .route('/auth', authRouter)
+  .route('/posts', postRouter);
 
 app.onError((err, c) => {
   if (err instanceof HTTPException) {

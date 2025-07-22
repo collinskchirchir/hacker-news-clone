@@ -4,6 +4,8 @@ import { integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 import { userTable } from '@/db/schemas/auth.ts';
 import { commentsTable } from '@/db/schemas/comments.ts';
 import { postUpvotesTable } from '@/db/schemas/upvotes.ts';
+import { createInsertSchema } from 'drizzle-zod';
+import { z } from 'zod';
 
 export const postsTable = pgTable('posts', {
   id: serial('id').primaryKey(),
@@ -25,6 +27,23 @@ export const postsTable = pgTable('posts', {
   })
     .notNull()
     .$onUpdate(() => new Date()),
+});
+
+export const insertPostSchema = createInsertSchema(postsTable, {
+  title: z
+    .string()
+    .min(3, { message: 'Title must be at least 3 characters long' }),
+  url: z
+    .url({ message: 'URL must be a valid URL' })
+    .trim()
+    .optional()
+    .nullish(),
+  content: z
+    .string()
+    .min(3, { message: 'Content must be at least 3 characters long' })
+    .trim()
+    .optional()
+    .nullish(),
 });
 
 export const postRelations = relations(postsTable, ({ one, many }) => ({
