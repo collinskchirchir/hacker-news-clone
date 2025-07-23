@@ -36,3 +36,37 @@ export const createPostSchema = insertPostSchema
     message: 'Either url or content is required',
     path: ['url', 'content'],
   });
+
+export const sortBySchema = z.enum(['points', 'recent']);
+export const orderSchema = z.enum(['asc', 'desc']);
+
+export const paginationSchema = z.object({
+  limit: z.coerce.number().optional().default(10),
+  page: z.coerce.number().optional().default(1),
+  sortBy: sortBySchema.optional().default('points'),
+  order: orderSchema.optional().default('desc'),
+  author: z.string().optional(),
+  site: z.string().optional(),
+});
+
+export type Post = {
+  id: number;
+  title: string | null;
+  url: string | null;
+  points: number;
+  createdAt: string;
+  commentCount: number;
+  author: {
+    username: string;
+    id: string;
+  };
+  isUpvoted: boolean;
+};
+
+export type PaginatedResponse<T> = {
+  pagination: {
+    page: number;
+    totalPages: number;
+  };
+  data: T;
+} & Omit<SuccessResponse, 'data'>;

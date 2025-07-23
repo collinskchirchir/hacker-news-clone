@@ -35,7 +35,6 @@ app.use('*', cors(), async (c, next) => {
   return next();
 });
 
-let postsRouter;
 const routes = app
   .basePath('/api')
   .route('/auth', authRouter)
