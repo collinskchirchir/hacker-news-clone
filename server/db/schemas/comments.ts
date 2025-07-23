@@ -10,7 +10,7 @@ import { z } from 'zod';
 export const commentsTable = pgTable('comments', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   userId: text().notNull(),
-  postId: text().notNull(),
+  postId: integer().notNull(),
   parentCommentId: integer(),
   content: text().notNull(),
   depth: integer().default(0).notNull(),

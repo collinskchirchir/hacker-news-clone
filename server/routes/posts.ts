@@ -13,6 +13,7 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 
 import {
+  createCommentSchema,
   createPostSchema,
   paginationSchema,
   type Comment,
@@ -205,7 +206,7 @@ export const postRouter = new Hono<Context>()
     '/:postId/comment',
     loggedIn,
     zValidator('param', z.object({ postId: z.coerce.number() })),
-    zValidator('form', insertCommentsSchema),
+    zValidator('form', createCommentSchema),
     async (c) => {
       const { postId } = c.req.valid('param');
       const { content } = c.req.valid('form');
@@ -215,8 +216,7 @@ export const postRouter = new Hono<Context>()
         const [updated] = await tx
           .update(postsTable)
           .set({
-            commentCount: sql`${postsTable.commentCount}
-            + 1`,
+            commentCount: sql`${postsTable.commentCount} + 1`,
           })
           .where(eq(postsTable.id, postId))
           .returning({ commentCount: postsTable.commentCount });
@@ -225,7 +225,7 @@ export const postRouter = new Hono<Context>()
             message: 'Post not found',
           });
         }
-        const [comment] = await tx
+        return tx
           .insert(commentsTable)
           .values({
             content,
