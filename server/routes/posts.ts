@@ -5,6 +5,7 @@ import { and, asc, countDistinct, desc, eq, sql } from 'drizzle-orm';
 import { db } from '@/adapter.ts';
 import type { Context } from '@/db/context.ts';
 import { userTable } from '@/db/schemas/auth';
+import { commentsTable, insertCommentsSchema } from '@/db/schemas/comments.ts';
 import { postsTable } from '@/db/schemas/posts.ts';
 import { postUpvotesTable } from '@/db/schemas/upvotes.ts';
 import { loggedIn } from '@/middleware/loggedIn.ts';
@@ -14,6 +15,7 @@ import { z } from 'zod';
 import {
   createPostSchema,
   paginationSchema,
+  type Comment,
   type ErrorResponse,
   type PaginatedResponse,
   type Post,
@@ -197,5 +199,63 @@ export const postRouter = new Hono<Context>()
         },
         200
       );
+    }
+  )
+  .post(
+    '/:postId/comment',
+    loggedIn,
+    zValidator('param', z.object({ postId: z.coerce.number() })),
+    zValidator('form', insertCommentsSchema),
+    async (c) => {
+      const { postId } = c.req.valid('param');
+      const { content } = c.req.valid('form');
+      const user = c.get('user')!;
+
+      const [comment] = await db.transaction(async (tx) => {
+        const [updated] = await tx
+          .update(postsTable)
+          .set({
+            commentCount: sql`${postsTable.commentCount}
+            + 1`,
+          })
+          .where(eq(postsTable.id, postId))
+          .returning({ commentCount: postsTable.commentCount });
+        if (!updated) {
+          throw new HTTPException(404, {
+            message: 'Post not found',
+          });
+        }
+        const [comment] = await tx
+          .insert(commentsTable)
+          .values({
+            content,
+            postId,
+            userId: user.id,
+          })
+          .returning({
+            id: commentsTable.id,
+            userId: commentsTable.userId,
+            postId: commentsTable.postId,
+            content: commentsTable.content,
+            points: commentsTable.points,
+            depth: commentsTable.depth,
+            parentCommentId: commentsTable.parentCommentId,
+            createdAt: getISOFormatDateQuery(commentsTable.createdAt),
+            commentCount: commentsTable.commentCount,
+          });
+      });
+      return c.json<SuccessResponse<Comment>>({
+        success: true,
+        message: 'Comment created',
+        data: {
+          ...comment,
+          commentUpvotes: [],
+          childComments: [],
+          author: {
+            username: user.username,
+            id: user.id,
+          },
+        } as Comment,
+      });
     }
   );

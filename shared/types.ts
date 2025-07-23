@@ -4,6 +4,7 @@
 //   message: 'Post Created',
 //   data: {id: 1}
 // };
+import { insertCommentsSchema } from '@/db/schemas/comments.ts';
 import { insertPostSchema } from '@/db/schemas/posts.ts';
 import { z } from 'zod';
 
@@ -63,6 +64,26 @@ export type Post = {
   isUpvoted: boolean;
 };
 
+export type Comment = {
+  id: number;
+  userId: string;
+  content: string;
+  points: number;
+  depth: number;
+  commentCount: number;
+  createdAt: string;
+  postId: number;
+  parentCommentId: number | null;
+  commentUpvotes: {
+    userId: string;
+  }[];
+  author: {
+    username: string;
+    id: string;
+  };
+  childComments?: Comment[];
+};
+
 export type PaginatedResponse<T> = {
   pagination: {
     page: number;
@@ -70,3 +91,7 @@ export type PaginatedResponse<T> = {
   };
   data: T;
 } & Omit<SuccessResponse, 'data'>;
+
+export const createCommentSchema = insertCommentsSchema.pick({
+  content: true,
+});
