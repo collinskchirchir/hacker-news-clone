@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
 import { and, asc, countDistinct, desc, eq, sql } from 'drizzle-orm';
 
 import { db } from '@/adapter.ts';
@@ -8,6 +9,7 @@ import { postsTable } from '@/db/schemas/posts.ts';
 import { postUpvotesTable } from '@/db/schemas/upvotes.ts';
 import { loggedIn } from '@/middleware/loggedIn.ts';
 import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
 
 import {
   createPostSchema,
@@ -134,4 +136,66 @@ export const postRouter = new Hono<Context>()
       },
       200
     );
-  });
+  })
+  .post(
+    '/:id/upvote',
+    loggedIn,
+    zValidator('param', z.object({ id: z.coerce.number() })),
+    async (c) => {
+      const { id } = c.req.valid('param');
+      const user = c.get('user')!;
+
+      let pointsChange: -1 | 1 = 1;
+
+      const points = await db.transaction(async (tx) => {
+        const [existingUpvote] = await tx
+          .select()
+          .from(postUpvotesTable)
+          .where(
+            and(
+              eq(postUpvotesTable.postId, id),
+              eq(postUpvotesTable.userId, user.id)
+            )
+          )
+          .limit(1);
+
+        pointsChange = existingUpvote ? -1 : 1;
+
+        const [updated] = await tx
+          .update(postsTable)
+          .set({ points: sql`${postsTable.points} + ${pointsChange}` })
+          .where(eq(postsTable.id, id))
+          .returning({ points: postsTable.points });
+
+        if (!updated) {
+          throw new HTTPException(404, {
+            message: 'Post not found',
+          });
+        }
+
+        // handle deleting if already upvoted or add upvotes to table
+        if (existingUpvote) {
+          await tx
+            .delete(postUpvotesTable)
+            .where(eq(postUpvotesTable.id, existingUpvote.id));
+        } else {
+          await tx.insert(postUpvotesTable).values({
+            postId: id,
+            userId: user.id,
+          });
+        }
+        return updated.points;
+      });
+      return c.json<SuccessResponse<{ count: number; isUpvoted: boolean }>>(
+        {
+          success: true,
+          message: 'Post updated',
+          data: {
+            count: points,
+            isUpvoted: pointsChange > 0,
+          },
+        },
+        200
+      );
+    }
+  );
