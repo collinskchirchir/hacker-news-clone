@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+import { logger } from 'hono/logger';
 
 import type { Context } from '@/db/context.ts';
 import { lucia } from '@/lucia.ts';
@@ -11,6 +12,7 @@ import { postRouter } from '@/routes/posts.ts';
 import type { ErrorResponse } from '@/shared/types.ts';
 
 const app = new Hono<Context>();
+app.use(logger());
 
 app.use('*', cors(), async (c, next) => {
   const sessionId = lucia.readSessionCookie(c.req.header('Cookie') ?? '');
