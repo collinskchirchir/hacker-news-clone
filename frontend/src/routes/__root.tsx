@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
@@ -10,9 +9,9 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <>
-      <div className='p-2 bg-red-600 flex gap-2 text-lg'>
+      <div className="p-2 flex gap-2 text-lg bg-red-600">
         <Link
-          to='/'
+          to="/"
           activeProps={{
             className: 'font-bold',
           }}
@@ -21,7 +20,7 @@ function RootComponent() {
           Home
         </Link>{' '}
         <Link
-          to='/about'
+          to="/about"
           activeProps={{
             className: 'font-bold',
           }}
@@ -31,7 +30,7 @@ function RootComponent() {
       </div>
       <hr />
       <Outlet />
-      <TanStackRouterDevtools position='bottom-left' />
+      <TanStackRouterDevtools position="bottom-left" />
       <ReactQueryDevtools />
     </>
   );

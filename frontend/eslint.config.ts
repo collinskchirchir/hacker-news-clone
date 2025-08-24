@@ -8,7 +8,7 @@ import pluginJs from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import pluginReact from 'eslint-plugin-react';
-import tailwind from 'eslint-plugin-tailwindcss';
+// import tailwind from 'eslint-plugin-tailwindcss'; // Disabled due to Tailwind CSS v4 compatibility
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -27,15 +27,9 @@ export default [
   jsxA11y.flatConfigs.recommended,
   ...pluginRouter.configs['flat/recommended'],
   ...pluginQuery.configs['flat/recommended'],
-  ...tailwind.configs['flat/recommended'],
+  // ...tailwind.configs['flat/recommended'], // Disabled due to Tailwind CSS v4 compatibility
   eslintConfigPrettier,
   {
-    settings: {
-      tailwindcss: {
-        config: 'tailwind.config.ts',
-        callees: ['cn', 'cva'],
-      },
-    },
     rules: {
       'react/no-unknown-property': 'off',
       'react/react-in-jsx-scope': 'off',
@@ -59,8 +53,14 @@ export default [
           allowFunctions: true,
         },
       ],
-      'tailwindcss/no-custom-classname': 'off',
-      'tailwindcss/classnames-order': 'error',
+      // Custom rule to warn about potentially invalid Tailwind classes
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'JSXAttribute[name.name="className"] Literal[value=/\\s{2,}/]',
+          message: 'Avoid multiple consecutive spaces in className'
+        }
+      ],
     },
   },
 ];
