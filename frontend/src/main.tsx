@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import ReactDOM from 'react-dom/client';
 
+import './globals.css';
+
 import { routeTree } from './routeTree.gen';
 
 // react query query client
