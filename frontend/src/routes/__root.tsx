@@ -10,7 +10,7 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <>
-      <div className="text-foreground flex min-h-screen flex-col bg-[#f5f5ed]">
+      <div className="flex min-h-screen flex-col bg-[#f5f5ed] text-foreground">
         <Header />
         <main className="container mx-auto grow p-4">
           <Outlet />
