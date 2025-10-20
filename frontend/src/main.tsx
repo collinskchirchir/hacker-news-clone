@@ -6,6 +6,8 @@ import ReactDOM from 'react-dom/client';
 import './globals.css';
 
 import { routeTree } from './routeTree.gen';
+import { Loader2Icon } from 'lucide-react';
+import { NotFound } from '@/components/not-found';
 
 // react query query client
 const queryClient = new QueryClient();
@@ -16,6 +18,15 @@ const router = createRouter({
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0, // disable cache from tanstack router so that we use react query cache instead
   context: { queryClient },
+  defaultPendingComponent: () => (
+    <div className='mx-auto mt-8 flex flex-col items-center justify-center'>
+      <Loader2Icon className='animate-spin' />
+      <p className='mt-2 text-sm text-muted-foreground'>
+        Loading...
+      </p>
+    </div>
+  ),
+  defaultNotFoundComponent: NotFound
 });
 
 // Register things for typesafety
