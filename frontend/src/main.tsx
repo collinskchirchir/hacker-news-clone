@@ -8,6 +8,7 @@ import './globals.css';
 import { routeTree } from './routeTree.gen';
 import { Loader2Icon } from 'lucide-react';
 import { NotFound } from '@/components/not-found';
+import { ErrorComponent } from '@/components/error-component';
 
 // react query query client
 const queryClient = new QueryClient();
@@ -21,12 +22,13 @@ const router = createRouter({
   defaultPendingComponent: () => (
     <div className='mx-auto mt-8 flex flex-col items-center justify-center'>
       <Loader2Icon className='animate-spin' />
-      <p className='mt-2 text-sm text-muted-foreground'>
+      <p className='text-muted-foreground mt-2 text-sm'>
         Loading...
       </p>
     </div>
   ),
-  defaultNotFoundComponent: NotFound
+  defaultNotFoundComponent: NotFound,
+  defaultErrorComponent: ({error}) => <ErrorComponent error={error} />
 });
 
 // Register things for typesafety
